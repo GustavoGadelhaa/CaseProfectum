@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.client.GraphQLRequest;
 import com.example.demo.dtos.response.CardResponse;
 import com.example.demo.dtos.response.PipefyResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,9 +16,14 @@ import java.util.Map;
 @Service
 public class PipefyService {
 
-    private final String API_URL = "https://api.pipefy.com/graphql";
-    private final String TOKEN = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJQaXBlZnkiLCJpYXQiOjE3MDQyMDIzOTMsImp0aSI6IjAyZmI0MGFmLWYwNGQtNGNjMi05Yjc4LWJkZmQ5YzhhZWM4NCIsInN1YiI6MzA0MTY1MTY2LCJ1c2VyIjp7ImlkIjozMDQxNjUxNjYsImVtYWlsIjoiZGVzYWZpb2ludGVncmFjYW9AcHJvZmVjdHVtLmNvbS5iciIsImFwcGxpY2F0aW9uIjozMDAzMDU3MDEsInNjb3BlcyI6W119LCJpbnRlcmZhY2VfdXVpZCI6bnVsbH0.NDCy-EvEyaQpct5lEeaXRdCCWCuU4K-DRggf2wdZIsVMo8tIwk0kY7bPVPnngajjULE_hF-O0rqqydkyzJiNBA";
-    private final String FASE_FIM_ID = "323403004";
+    @Value("${pipefy.api-url}")
+    private String apiUrl;
+
+    @Value("${pipefy.token}")
+    private String token;
+
+    @Value("${pipefy.fase-fim-id}")
+    private String faseFimId;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -40,7 +46,7 @@ public class PipefyService {
         CardResponse card = response.getData().getMoveCard().getCard();
 
 
-        if (FASE_FIM_ID.equals(card.getCurrentPhase().getId())) {
+        if (faseFimId.equals(card.getCurrentPhase().getId())) {
             Map<String, Object> finalResult = new HashMap<>();
             finalResult.put("status", "PROCESSO_FINALIZADO");
             finalResult.put("mensagem", "O card atingiu a fase final: " + card.getCurrentPhase().getName());
@@ -67,9 +73,9 @@ public class PipefyService {
     private PipefyResponse execute(String query) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", TOKEN);
+        headers.set("Authorization", token);
 
         HttpEntity<GraphQLRequest> entity = new HttpEntity<>(new GraphQLRequest(query), headers);
-        return restTemplate.postForObject(API_URL, entity, PipefyResponse.class);
+        return restTemplate.postForObject(apiUrl, entity, PipefyResponse.class);
     }
 }
